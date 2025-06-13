@@ -1,40 +1,43 @@
 import React, { useState } from 'react';
 import { Button } from '../../common/Button';
 import { IoCloseCircle } from 'react-icons/io5';
-import { deleteAgentData } from '../../Commonapicall/AgentsSupplierapicall/Agentsapis';
 import { toast } from 'react-toastify';
+import { DeleteBlog } from '../../Commonapicall/settingsapicall/BlogTableaplicall';
 
-interface DeleteAgentsPopupProps {
+interface DeleteBlogPopupProps {
   closePopup: () => void;
-  agentData: {
+  DeleteBlogData: {
     id: number;
-    name: string;
   };
   refreshData: () => void;
 }
 
-export const DeleteAgentsPopup: React.FC<DeleteAgentsPopupProps> = ({ 
-  closePopup, 
-  agentData, 
-  refreshData 
+export const DeleteBlogPopup: React.FC<DeleteBlogPopupProps> = ({
+  closePopup,
+  DeleteBlogData,
+  refreshData
 }) => {
   const [error, setError] = useState<string | null>(null);
 
+
+
   const handleAgentDelete = async () => {
     setError(null);
+
     try {
-      const success = await deleteAgentData(agentData.id);
-      if (success) {
+      const success = await DeleteBlog(DeleteBlogData.id);
+      if (success == true) {
+        toast.success("Blogs Data Deleted Successfully");
         closePopup();
         refreshData();
-        toast.success("ASupplier Deleted successfully");
       } else {
-        setError("Failed to delete agent. Please try again.");
-        toast.success("Failed to delete agent. Please try again.")
+        setError("Failed to delete Blogs Data. Please try again.");
+        toast.error("Failed to delete Blogs Data. Please try again.");
       }
     } catch (error: any) {
-      setError(error.message || "Failed to delete agent. Please try again.");
-    } 
+      setError(error.message || "Failed to delete Blogs Data. Please try again.");
+      toast.error("Failed to delete Blogs Data. Please try again.");
+    }
   };
 
   return (
@@ -42,8 +45,8 @@ export const DeleteAgentsPopup: React.FC<DeleteAgentsPopupProps> = ({
       <div className="container mx-auto">
         <div className="relative bg-white rounded-[5px] w-4/12 mx-auto px-5 py-5">
           <div className="relative mb-10">
-            <h2 className="text-2xl text-mindfulBlack font-semibold pb-3 border-b-2 border-armsgrey ">Delete Agents/Supplier</h2>
-            <div className="absolute inset-x-0 bottom-[-20px] mx-auto bg-mindfulgrey rounded-md w-full h-0.5"></div>
+            <h2 className="text-2xl text-armsBlack font-semibold pb-3 border-b-2 border-armsgrey ">Delete Blog Data</h2>
+            <div className="absolute inset-x-0 bottom-[-20px] mx-auto rounded-md w-full h-0.5"></div>
           </div>
 
           {/* Close Button */}
@@ -51,13 +54,13 @@ export const DeleteAgentsPopup: React.FC<DeleteAgentsPopupProps> = ({
             onClick={closePopup}
             className="absolute top-5 right-5 w-fit cursor-pointer"
           >
-            <IoCloseCircle className="text-mindfulGrey text-[32px]" />
+            <IoCloseCircle className="text-[32px]" />
           </div>
 
           {/* Content */}
           <div className="text-center">
-            <p className="text-lg text-mindfulBlack">
-              Are you sure you want to delete {agentData.name}?
+            <p className="text-lg text-armsBlack">
+              Are you sure you want to delete?
             </p>
 
             {error && <p className="text-sm text-red-600">{error}</p>}

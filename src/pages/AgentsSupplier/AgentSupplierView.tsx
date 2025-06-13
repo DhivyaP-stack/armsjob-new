@@ -8,24 +8,40 @@ import { FaArrowLeft } from "react-icons/fa6";
 import { EditAgentsSupplierPopup } from "./EditAgentSupplierPopup";
 import { AgentSupplierViewShimmer } from "../../components/ShimmerLoading/ShimmerViewpage/CommonViewShimmer";
 import { addAgentRemark, fetchAgents, fetchAgentsList, fetchAgentsListById } from "../../Commonapicall/AgentsSupplierapicall/Agentsapis";
-import { AgentSupplier, ApiResponse } from "./AgentsSupplierTable";
+import { AgentSupplier} from "./AgentsSupplierTable";
 import { toast } from "react-toastify";
 import { z } from "zod";
 import { PiToggleLeftFill, PiToggleRightFill } from "react-icons/pi";
 import { StatusAgentsPopup } from "./AgentsStatusPopup";
 
+// export interface Agent {
+//     id: number;
+//     contact_person_name: string;
+// }
+// export interface AgentSearchResponse {
+//     status: string;
+//     message: string;
+//     data: Agent[];
+//     count: number;
+//     next: string | null;
+//     previous: string | null;
+// }
+
+
 export interface Agent {
-    id: number;
-    name: string;
+  id: number;
+  contact_person_name: string;
 }
+
 export interface AgentSearchResponse {
-    status: string;
-    message: string;
-    data: Agent[];
-    count: number;
-    next: string | null;
-    previous: string | null;
+  status: string;
+  message: string;
+  data: Agent[];
+  count: number;
+  next: string | null;
+  previous: string | null;
 }
+
 
 const remarkSchema = z.object({
     remark: z.string().min(1, "Remark is required").max(500, "Remark must be less than 500 characters")
@@ -44,7 +60,7 @@ export const AgentSupplyView = () => {
     const [loading, setLoading] = useState(false);
     const [agentId, setAgentId] = useState<number | null>(null);
     const [remarkError, setRemarkError] = useState<string | null>(null);
-    const [AgentsStatus, setAgentsstatus] = useState<{ id: number, name: string, currentStatus: boolean } | null>(null);
+    const [AgentsStatus, _setAgentsstatus] = useState<{ id: number, name: string, currentStatus: boolean } | null>(null);
 
     const navigate = useNavigate();
 
@@ -59,12 +75,12 @@ export const AgentSupplyView = () => {
     //     setShowAgentsStatusPopup(true);
     // }
 
-    const openAgentsStatusPopup = (agent: AgentSupplier) => {
-        setAgentsstatus({
-            id: agent.id,
-            name: agent.name,
-            currentStatus: agent.status // assuming status is a boolean
-        });
+    const openAgentsStatusPopup = (_agent: AgentSupplier) => {
+        // setAgentsstatus({
+        //     id: agent.id,
+        //     name: agent.contact_person_name,
+        //     currentStatus: agent.status // assuming status is a boolean
+        // });
         setShowAgentsStatusPopup(true);
     }
 
@@ -75,6 +91,7 @@ export const AgentSupplyView = () => {
     const handleSearch = async (query: string) => {
         try {
             const result = await fetchAgents(query);
+           
             setAgents(result);
         } catch (err) {
             console.error("Search error", err);
@@ -118,7 +135,7 @@ export const AgentSupplyView = () => {
                     remark: newRemark,
                     created_at: new Date().toISOString(),
                     updated_at: new Date().toISOString(),
-                    agent_supplier_name: agent.name,
+                    agent_supplier_name: agent.contact_person_name,
                     // Add any other required fields from your AgentRemark interface
                 };
                 // Update the local state with the new remark
@@ -126,7 +143,7 @@ export const AgentSupplyView = () => {
                     if (!prev) return null;
                     return {
                         ...prev,
-                        agent_remarks: [...prev.agent_remarks, newRemarkObj]
+                        supplier_remarks: [...prev.supplier_remarks, newRemarkObj]
                     };
                 });
                 // Clear the remark input
@@ -146,9 +163,8 @@ export const AgentSupplyView = () => {
         const fetchAgent = async () => {
             setLoading(true);
             try {
-                const response = await fetchAgentsList() as ApiResponse;
-                console.log("response?.data?.data", response?.results?.data)
-                setAgentSupplier(response?.results?.data);
+                const response = await fetchAgentsList() as AgentSupplier[];
+                setAgentSupplier(response);
                 //setTotalItems(response.count);
             } catch (err) {
                 console.error("Error fetching candidates:", err);
@@ -172,7 +188,8 @@ export const AgentSupplyView = () => {
     const fetchSingleAgent = async () => {
         try {
             if (id) {
-                const response = await fetchAgentsListById(Number(id));
+                const response = await fetchAgentsListById(Number(id)) as AgentSupplier;
+                console.log("lllllllllllllllllll",response)
                 setAgent(response);
                 setAgentId(response.id);
             }
@@ -245,13 +262,13 @@ export const AgentSupplyView = () => {
                                         <Link
                                             key={c.id}
                                             // to={`/Candidate/${id}/${c.id}`}
-                                            to={`/AgentSupplyView/${c.id}`}
+                                            to={`/AgentsSupplier/${c.id}`}
                                             className={`block p-3 border-b ${c.id === Number(id)} hover:bg-gray-100
                                                     `}
                                         >
                                             <div className="flex justify-between items-center">
                                                 <div className="flex-grow">
-                                                    <div className="text-sm font-medium">{c.name}</div>
+                                                    <div className="text-sm font-medium">{c.contact_person_name}</div>
                                                     {/* <div className="text-xs text-gray-500 mt-1">ID: {c.candidateId}</div> */}
                                                 </div>
                                                 {/* <div className={`w-2 h-2 rounded-full ${c.isActive ? 'bg-green-500' : 'bg-gray-400'}`} /> */}
@@ -280,7 +297,7 @@ export const AgentSupplyView = () => {
                                             <div className="flex items-center space-x-2 cursor-pointer"
                                                 onClick={() => agent && openAgentsStatusPopup(agent)}>
                                                 <div className="flex items-center space-x-2">
-                                                    {agent?.status === true ? (
+                                                    {agent?.status === "success" ? (
                                                         <>
                                                             <PiToggleRightFill className="text-green-500 text-3xl cursor-pointer" />
                                                             <span className="text-green-600 text-sm cursor-pointer">Active</span>
@@ -310,7 +327,7 @@ export const AgentSupplyView = () => {
                                         <div className="grid grid-cols-3 gap-4 pt-2 w-full">
                                             <div>
                                                 <p className="text-xs text-gray-600">Name of Agent/Supplier</p>
-                                                <p className="text-sm font-bold mt-1">{agent?.name || 'N/A'}</p>
+                                                <p className="text-sm font-bold mt-1">{agent?.contact_person_name || 'N/A'}</p>
                                             </div>
                                             <div>
                                                 <p className="text-xs text-gray-600"> Mobile Number</p>
@@ -356,7 +373,7 @@ export const AgentSupplyView = () => {
                                     <div className="grid grid-cols-3 gap-4 pt-2">
                                         <div>
                                             <p className="text-xs text-gray-600">Categories You Can Supply</p>
-                                            <p className="text-sm font-bold mt-1">{agent?.supply_category_names || 'N/A'}</p>
+                                            <p className="text-sm font-bold mt-1">{agent?.supply_categories|| 'N/A'}</p>
                                         </div>
                                         <div>
                                             <p className="text-xs text-gray-600">Number of People You Can Supply</p>
@@ -413,8 +430,8 @@ export const AgentSupplyView = () => {
                                     />
                                     <div className="mt-4 space-y-4 max-h-[calc(100vh-400px)] overflow-y-auto">
                                         {/*Remarks*/}
-                                        {agent?.agent_remarks && agent.agent_remarks.length > 0 ? (
-                                            agent.agent_remarks.map((comment, index) => (
+                                        {agent?.supplier_remarks && agent.supplier_remarks.length > 0 ? (
+                                            agent.supplier_remarks.map((comment, index) => (
                                                 <div key={index} className="border-b pb-4">
                                                     <div className="flex max-xl:flex-col items-center justify-between mb-2">
                                                         <div className="flex items-center gap-2">
@@ -425,7 +442,7 @@ export const AgentSupplyView = () => {
                                                                     className="w-full h-full object-cover"
                                                                 />
                                                             </div>
-                                                            <span className="text-sm font-medium">{agent.name}</span>
+                                                            <span className="text-sm font-medium">{agent.contact_person_name}</span>
                                                         </div>
                                                         <span className="text-xs text-gray-500">  {new Date(comment.created_at).toLocaleDateString()}</span>
                                                     </div>

@@ -11,44 +11,95 @@ import { AgentSupplierTableShimmer } from "../../components/ShimmerLoading/Shimm
 import React from "react";
 import { fetchAgentsList, fetchAgentsPageList } from "../../Commonapicall/AgentsSupplierapicall/Agentsapis";
 import { DeleteAgentsPopup } from "./DeleteAgentsPopup";
+import { IoDocumentText } from "react-icons/io5";
+
+// export interface AgentSupplier {
+//   current_location: any;
+//   uae_experience_years: any;
+//   category: any;
+//   currently_employed: any;
+//   data: any;
+//   id: number;
+//   agent_supplier_id: string;
+//   name:string;
+//   company_name: string;
+//   contact_person_name:string;
+//   mobile_no: string;
+//   whatsapp_no: string;
+//   email: string;
+//   can_recruit: boolean | null;
+//   associated_earlier: boolean | null;
+//   can_supply_manpower: boolean | null;
+//   supply_categories: string | null;
+//   supply_category_names: string | null;
+//   quantity_estimates: string | null;
+//   areas_covered: string | null;
+//   additional_notes: string | null;
+//   office_location:string;
+//   categories_available:string;
+//   quantity_per_category:string;
+//   previous_experience:string;
+//   worked_with_arms_before:string;
+//   remarks: string | null;
+//   is_deleted: boolean;
+//   status: boolean;
+//   created_at: string;
+//   agent_remarks: {
+//     id: number;
+//     remark: string;
+//     agent_supplier_name: string;
+//     created_at: string;  // ISO date-time string
+//     updated_at: string;
+//   }[];
+// }
+
+// export interface ApiResponse {
+//   status: string;
+//   data: any;
+//   count: number;
+//   next: string | null;
+//   previous: string | null;
+//   results: {
+//     status: string;
+//     message: string;
+//     data: AgentSupplier[];
+//   };
+// }
+
 
 export interface AgentSupplier {
-  current_location: any;
-  uae_experience_years: any;
-  category: any;
-  currently_employed: any;
-  data: any;
   id: number;
-  agent_supplier_id: string;
-  name: string;
+  supplier_id: string;
+  company_name: string;
+  contact_person_name: string;
   mobile_no: string;
   whatsapp_no: string;
   email: string;
-  can_recruit: boolean | null;
-  associated_earlier: boolean | null;
-  can_supply_manpower: boolean | null;
+  can_recruit: boolean;
+  associated_earlier: boolean;
+  can_supply_manpower: boolean;
   supply_categories: string | null;
-  supply_category_names: string | null;
   quantity_estimates: string | null;
   areas_covered: string | null;
   additional_notes: string | null;
   remarks: string | null;
+  office_location: string;
+  categories_available: string | [];
+  quantity_per_category: string | undefined;
+  trade_license: string | null;
+  company_license: string | null;
+  previous_experience: boolean;
+  worked_with_arms_before: boolean;
+  comments: string | null;
   is_deleted: boolean;
-  status: boolean;
+  status: string;
   created_at: string;
-  agent_remarks: {
-    id: number;
-    remark: string;
-    agent_supplier_name: string;
-    created_at: string;  // ISO date-time string
-    updated_at: string;
-  }[];
+  supplier_remarks: any[]; // Or define a proper type if you have a structure for remarks
 }
 
-
 export interface ApiResponse {
-  status: string;
-  data: any;
+
+  data(data: any): void | PromiseLike<void>;
   count: number;
   next: string | null;
   previous: string | null;
@@ -69,7 +120,6 @@ export const AgentSupplierTable = () => {
   const navigate = useNavigate();
   // const [loading, setLoading] = useState(true);
   // const [error, setError] = useState<string | null>(null);
-
   const [, setError] = useState<string | null>(null);
   const [showDeleteAgentsSupplierPopup, setShowDeleteAgentsPopup] = useState(false);
   const [agentToDelete, setAgentToDelete] = useState<{ id: number, name: string } | null>(null);
@@ -118,7 +168,7 @@ export const AgentSupplierTable = () => {
 
   const openDeleteAgentsPopup = (agent: AgentSupplier, e: React.MouseEvent) => {
     e.stopPropagation();
-    setAgentToDelete({ id: agent.id, name: agent.name });
+    setAgentToDelete({ id: agent.id, name: agent.company_name });
     setShowDeleteAgentsPopup(true);
   };
 
@@ -131,6 +181,8 @@ export const AgentSupplierTable = () => {
     try {
       setIsLoading(true);
       const response = await fetchAgentsPageList(currentPage, search.trim(), filterBy, itemsPerPage.toString(), status) as ApiResponse;
+
+      //const response = await fetchAgentsPageList() as ApiResponse;
       setAgents(response?.results?.data || []);
       setCount(response?.count || 1);
     } catch (error) {
@@ -142,7 +194,8 @@ export const AgentSupplierTable = () => {
 
   useEffect(() => {
     fetchPagination();
-  }, [currentPage, search, filterBy, itemsPerPage, status]);
+  }, []);
+  // }, [currentPage, search, filterBy, itemsPerPage, status]);
 
   const handleAgentAdded = () => {
     fetchPagination(); // Now this works correctly
@@ -152,7 +205,7 @@ export const AgentSupplierTable = () => {
   const refreshAgentList = async () => {
     try {
       setIsLoading(true);
-      const response = await fetchAgentsList() as ApiResponse;
+      const response = await fetchAgentsList() as unknown as ApiResponse;
       setAgents(response?.results?.data);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to fetch agents");
@@ -241,6 +294,7 @@ export const AgentSupplierTable = () => {
                     <th className="bg-main px-2 py-3 ">WhatsApp No</th>
                     <th className="bg-main px-2 py-3 ">Email ID</th>
                     <th className="bg-main px-2 py-3 ">Can the agent do <br />Recruitment?</th>
+                    <th className="bg-main px-2 py-3 ">Associated earlier</th>
                     <th className="bg-main px-2 py-3 ">Can the agent do <br /> manpower supplying?</th>
                     <th className="bg-main px-2 py-3 ">Catogory you <br /> can supply </th>
                     <th className="bg-main px-2 py-3 ">Quantity <br />Estimate</th>
@@ -271,27 +325,36 @@ export const AgentSupplierTable = () => {
                       <tr key={agent.id}
                         onClick={() => navigate(`/AgentsSupplier/${agent.id}`)}
                         className="border-b-2 border-armsgrey hover:bg-gray-100 cursor-pointer">
-                        <td className="px-2 py-5">{agent.agent_supplier_id || "N/A"}</td>
-                         <td className="px-2 py-5">{" NULL "}</td>
-                        <td className="px-2 py-5">{agent.name || "N/A"}</td>
+                        <td className="px-2 py-5">{agent.supplier_id || "N/A"}</td>
+                        <td className="px-2 py-5">{agent.company_name || "N/A"}</td>
+                        <td className="px-2 py-5">{agent.contact_person_name || "N/A"}</td>
                         <td className="px-2 py-5">{agent.mobile_no || "N/A"}</td>
                         <td className="px-2 py-5">{agent.whatsapp_no || "N/A"}</td>
                         <td className="px-2 py-5">{agent.email || "N/A"}</td>
                         <td className="px-2 py-5">{agent.can_recruit ? "yes" : "no"}</td>
-                        {/* <td className="px-2 py-5">{agent.associated_earlier ? "yes" : "no"}</td> */}
+                        <td className="px-2 py-5">{agent.associated_earlier ? "yes" : "no"}</td>
                         <td className="px-2 py-5">{agent.can_supply_manpower ? "yes" : "no"}</td>
-                        <td className="px-2 py-5">{agent.supply_category_names || "N/A"}</td>
+                        <td className="px-2 py-5">{agent.supply_categories || "N/A"}</td>
                         <td className="px-2 py-5">{agent.quantity_estimates || "N/A"}</td>
                         <td className="px-2 py-5">{agent.areas_covered || "N/A"}</td>
                         <td className="px-2 py-5">{agent.additional_notes || "N/A"}</td>
-                        <td className="px-2 py-5">{" NULL "}</td>
-                        <td className="px-2 py-5">{" NULL "}</td>
-                        <td className="px-2 py-5">{" NULL "}</td>
-                        <td className="px-2 py-5">{" NULL "}</td>
-                        <td className="px-2 py-5">{" NULL "}</td>
-                        <td className="px-2 py-5">{" NULL "}</td>
-                        <td className="px-2 py-5">{" NULL "}</td>
-                        <td className="px-2 py-5">{" NULL "}</td>
+                        <td className="px-2 py-5">{agent.office_location || "N/A"}</td>
+                        <td className="px-2 py-5">{agent.categories_available || "N/A"}</td>
+                        <td className="px-2 py-5">{agent.quantity_per_category || "N/A"}</td>
+                        <td className="px-2 py-5">{agent.trade_license || "N/A"}</td>
+                        {/* <td className="px-2 py-5">{agent.company_license || "N/A"}</td>
+                        <td className="px-2 py-5">{agent.previous_experience || "N/A"}</td> */}
+                        <td className="px-2 py-3">
+                          <div className="text-armsjobslightblue flex text-lg items-center gap-1">
+                            <IoDocumentText /> {agent.trade_license}
+                          </div>
+                        </td>
+                        <td className="px-2 py-3">
+                          <div className="text-armsjobslightblue flex text-lg items-center gap-1">
+                            <IoDocumentText /> {agent.company_license}
+                          </div>
+                        </td>
+                        <td className="px-2 py-5">{agent.worked_with_arms_before || "N/A"}</td>
                         <td className="px-2 py-5">
                           <span
                             className={`px-2 py-1 rounded-full text-xs ${agent.status
@@ -304,7 +367,6 @@ export const AgentSupplierTable = () => {
                         </td>
                         <td className="px-2 py-5">{new Date(agent.created_at).toLocaleString()}</td>
                         <td className="px-2 py-5 sticky right-0 z-10 max-sm:!static bg-armsWhite border-b-2 border-armsgrey">
-
                           <div className="flex items-center space-x-2">
                             {/* Edit Button */}
                             <div
@@ -333,7 +395,6 @@ export const AgentSupplierTable = () => {
                               </div>
                             </div>
                           </div>
-
                         </td>
                       </tr>
                     ))
