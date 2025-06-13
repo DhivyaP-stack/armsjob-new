@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { IoCloseOutline } from "react-icons/io5";
 import { Button } from "../../common/Button";
 import { InputField } from "../../common/InputField";
@@ -7,11 +7,13 @@ import * as zod from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "react-toastify";
-import { AddCandidateBench } from "../../Commonapicall/settingsapicall/CandidateBenchapicall";
+import { CandidateBench } from "../../pages/SettingTable/CandidatebenchlistTable";
+import { EditCandidateBench } from "../../Commonapicall/settingsapicall/CandidateBenchapicall";
 
 interface AddCandidateBenchListPopupProps {
     closePopup: () => void;
     refreshData: () => void;
+    editCandidateBench: CandidateBench;
 }
 
 const candidateBenchSchema = zod.object({
@@ -24,26 +26,37 @@ const candidateBenchSchema = zod.object({
 
 type CandidateBenchFormData = zod.infer<typeof candidateBenchSchema>;
 
-export const AddCandidateBenchListPopup: React.FC<AddCandidateBenchListPopupProps> = ({
+export const EditCandidateBenchListPopup: React.FC<AddCandidateBenchListPopupProps> = ({
     closePopup,
-    refreshData
+    refreshData,
+    editCandidateBench
 }) => {
     const [, setError] = useState<string | null>(null);
-    const [, setLoading] = useState(false);
 
     const {
         register,
         handleSubmit,
         formState: { errors },
         reset,
+        setValue,
     } = useForm<CandidateBenchFormData>({
         resolver: zodResolver(candidateBenchSchema),
     });
 
-    const onSubmit = async (data: CandidateBenchFormData) => {
+    useEffect(() => {
+        if (editCandidateBench) {
+            setValue("name", editCandidateBench.name || '');
+            setValue("technology", editCandidateBench.technology || '');
+            setValue("experience", editCandidateBench.experience || '');
+            setValue("availability", editCandidateBench.availability || '');
+            setValue("location", editCandidateBench.location || '');
+        }
+    }, [editCandidateBench, setValue]);
+
+    const handleFormSubmit = async (data: CandidateBenchFormData) => {
         try {
-            setLoading(true);
-            const success = await AddCandidateBench(
+            const success = await EditCandidateBench(
+                editCandidateBench.id,
                 data.name || '',
                 data.technology || '',
                 data.experience || '',
@@ -51,22 +64,19 @@ export const AddCandidateBenchListPopup: React.FC<AddCandidateBenchListPopupProp
                 data.location || '',
             )
             if (success) {
-                toast.success("Candidate Bench Added Successfully");
+                toast.success("Candidate Bench Updated Successfully");
                 closePopup();
                 refreshData();
                 reset();
             } else {
-                toast.error("Failed to Add Testimonial. Please try again.");
+                toast.error("Failed to Add Candidate Bench. Please try again.");
             }
         } catch (error: unknown) {
             const errorMessage = error instanceof Error ? error.message : "Failed to submit form";
             setError(errorMessage);
             toast.error("Failed to submit form");
-        } finally {
-            setLoading(false);
         }
     };
-
 
     return (
         <div className="fixed inset-0 bg-armsAsh bg-opacity-70 flex justify-center items-start pt-25 z-50">
@@ -74,7 +84,7 @@ export const AddCandidateBenchListPopup: React.FC<AddCandidateBenchListPopupProp
                 {/* Heading */}
                 <div className="relative mb-5">
                     <h2 className="text-xl font-bold mb-4 border-b-2 border-armsgrey pb-3">
-                        Add CandidateBench List
+                        Edit CandidateBench List
                     </h2>
                 </div>
                 <div
@@ -85,7 +95,7 @@ export const AddCandidateBenchListPopup: React.FC<AddCandidateBenchListPopupProp
                 </div>
 
                 {/* Form */}
-                <form onSubmit={handleSubmit(onSubmit)} className="h-[calc(100%-150px)] overflow-y-auto">
+                <form onSubmit={handleSubmit(handleFormSubmit)} className="h-[calc(100%-150px)] overflow-y-auto">
                     <div className="grid grid-cols-2 gap-4">
                         <div>
                             <label className="text-sm font-semibold mb-1">Name</label>

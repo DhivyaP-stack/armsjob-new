@@ -151,30 +151,14 @@ export const AddCandidateList = async (
 
 //EditCandidate
 export const EditCandidateList = async (
-  id: number,
-  FullName: string,
-  MobileNumber: string,
-  WhatsappNumber: string,
-  Email: string,
-  Nationality: string,
-  CurrentLocation: string,
-  VisaType: string,
-  AvailabilitytoJoin: string,
-  PositionApplyingFor: string,
-  Category: string,
-  UAEexperience: string,
-  SkillsTasks: string,
-  PreferredWorkLocation: string,
-  ExpectedSalary: string,
-  VisaExpiryDate: string,
-  OtherCategory: string,
-  LanguagesSpoken: string,
-  PreferredWorkType: string,
-  CurrentlyEmployed: string,
-  AdditionalNotes: string,
-  ReferralName: string,
-  ReferralContact: string
-) => {
+  id: number, FullName: string, MobileNumber: string, WhatsappNumber: string, Email: string, Nationality: string, CurrentLocation: string, VisaType: string, AvailabilitytoJoin: string, PositionApplyingFor: string, Category: string, UAEexperience: string, SkillsTasks: string, PreferredWorkLocation: string, ExpectedSalary: string, VisaExpiryDate: string, OtherCategory: string, LanguagesSpoken: string, PreferredWorkType: string, CurrentlyEmployed: string, AdditionalNotes: string, ReferralName: string, ReferralContact: string,
+  cvFile?: File,
+  insuranceFile?: File,
+  passportFile?: File,
+  visaFile?: File,
+  nocFile?: File,
+  licenseFile?: File,
+  experienceCertificateFile?: File) => {
   try {
     const formData = new FormData();
     formData.append('full_name', FullName);
@@ -198,7 +182,14 @@ export const EditCandidateList = async (
     formData.append('currently_employed', CurrentlyEmployed);
     formData.append('additional_notes', AdditionalNotes);
     formData.append('referral_name', ReferralName);
-    formData.append('referral_contact', ReferralContact)
+    formData.append('referral_contact', ReferralContact);
+    if (cvFile) formData.append('upload_cv', cvFile);
+    if (insuranceFile) formData.append('insurance', insuranceFile);
+    if (passportFile) formData.append('passport', passportFile);
+    if (visaFile) formData.append('visa', visaFile);
+    if (nocFile) formData.append('noc', nocFile);
+    if (licenseFile) formData.append('license', licenseFile);
+    if (experienceCertificateFile) formData.append('experience_certificate', experienceCertificateFile);
     const response = await apiAxios.patch(`/api/candidates/update/${id}/`, formData, {
       headers: {
         'Content-Type': 'multipart/form-data'

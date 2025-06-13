@@ -1,72 +1,69 @@
-import { useEffect, useState } from "react";
-import { InputField } from "../../common/InputField";
-import { Button } from "../../common/Button";
-import { FaUser } from "react-icons/fa6";
+import { useCallback, useEffect, useState } from "react";
 import { MdDelete, MdModeEdit } from "react-icons/md";
 import { Pagination } from "../../common/Pagination";
-import { IoMdSearch } from "react-icons/io";
 import { getCategories } from "../../Commonapicall/Categoriesapicall/Categoriesapis";
 import { DeleteCategoryPopup } from "./DeleteCategoryPopup";
-import { NotifyError } from "../../common/Toast/ToastMessage";
-import { AddCategoryPopup } from "./AddCategoryPopup";
 import { CategoryTableShimmer } from "../../components/ShimmerLoading/ShimmerTable/CategoryTableShimmer";
 import { EditCategoryPopup } from "./EditCategoryPopup";
 
-interface Category {
+interface CategoriesTableProps {
+  searchQuery?: string;
+  refreshTrigger?: boolean;
+}
+export interface Category {
   id: number;
   category: string;
   status: boolean;
   is_deleted: boolean;
 }
 
-export interface CategoryApiResponse {
-  count: number;
-  next: string;
-  previous: string;
-  results: Category[]
+export interface TestimonialData {
+  status: string;
+  message: string;
+  data: Category[];
 }
 
-export const CategoriesTable = () => {
+export interface CategoryApiResponse {
+  count: number;
+  next: string | null;
+  previous: string | null;
+  results: TestimonialData;
+}
+
+export const CategoriesTable: React.FC<CategoriesTableProps> = ({ searchQuery = "", refreshTrigger }) => {
   const [categories, setCategories] = useState<Category[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
-  const [showAddCategoryPopup, setShowAddCategoryPopup] = useState(false);
   const [showEditCategoryPopup, setShowEditCategoryPopup] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<any>(null);
-  const [searchTerm, setSearchTerm] = useState("");
   const [showDeleteCategoryPopup, setShowDeleteCategoryPopup] = useState(false);
   const [categoryToDelete, setcategoryToDelete] = useState<{ id: number, name: string } | null>(null);
   const [loading, setLoading] = useState(true);
   const [totalCount, setTotalCount] = useState(0);
 
-  useEffect(() => {
-    const fetchCategories = async () => {
-      try {
-        setLoading(true);
-        const data = await getCategories(currentPage, itemsPerPage) as CategoryApiResponse;
-        //setCategories(data.results); // adjust if API returns { results: [...] }      setTotalCount(response.count);
-        setCategories(Array.isArray(data.results) ? data.results : []);
-        setTotalCount(data.count);
-      } catch (error) {
-        console.error("Failed to load categories:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchCategories();
-  }, [currentPage, itemsPerPage]);
-
-  const refreshCategoryList = async () => {
+  const loadcategorylist = useCallback(async () => {
+    setLoading(true);
     try {
-      setLoading(true);
-      const response = await getCategories(currentPage, itemsPerPage) as CategoryApiResponse;
-      setCategories(response.results);
-    } catch (err) {
-      NotifyError(err instanceof Error ? err.message : "Failed to fetch agents");
+      const response = await getCategories(currentPage, searchQuery.trim(), itemsPerPage.toString()) as CategoryApiResponse// Pass the page size as string);
+      if (!response?.results?.data) {
+        setCategories([]);
+        setTotalCount(0);
+        return;
+      }
+      setCategories(response?.results?.data);
+      setTotalCount(response.count || 0);
+    } catch (error) {
+      console.error("Error fetching pagination data:", error);
+      setCategories([]);
+      setTotalCount(0);
     } finally {
       setLoading(false);
     }
-  };
+  }, [currentPage, searchQuery, itemsPerPage]);
+
+  useEffect(() => {
+    loadcategorylist();
+  }, [currentPage, searchQuery, itemsPerPage, refreshTrigger]);
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
@@ -88,14 +85,6 @@ export const CategoriesTable = () => {
     setcategoryToDelete(null);
   }
 
-  const openAddCategoryPopup = () => {
-    setShowAddCategoryPopup(true);
-  }
-
-  const closeAddCategoryPopup = () => {
-    setShowAddCategoryPopup(false);
-  }
-
   const openEditCategoryPopup = (category: any) => {
     setShowEditCategoryPopup(true);
     setSelectedCategory(category);
@@ -108,40 +97,6 @@ export const CategoriesTable = () => {
   return (
     <div className="p-6">
       <div className="bg-white px-5 py-1 rounded-lg shadow-sm">
-        {/* Header Section */}
-        <div className="flex items-center justify-between pb-2 py-2">
-          <div className="flex items-center">
-            <span className="text-2xl font-bold">Categories</span>
-          </div>
-          <div className="flex items-center gap-4">
-            <Button
-              onClick={openAddCategoryPopup}
-              buttonType="button"
-              buttonTitle="Add Category"
-              icon={
-                <div className="relative w-4 h-4">
-                  <FaUser className="w-4 h-4 text-current" />
-                  <span className="absolute -top-1.5 -left-2 text-current text-[15px] font-bold">
-                    +
-                  </span>
-                </div>
-              }
-              className="flex items-center gap-2 bg-armsjobslightblue text-armsWhite border border-armsjobslightblue rounded px-4 py-2 font-bold hover:text-armsjobslightblue hover:bg-armsWhite transition-colors duration-200"
-            />
-            <div className="relative w-[300px]">
-              <InputField
-                type="text"
-                placeholder="Search"
-                className="w-full rounded-[5px] border-[1px] border-armsgrey pl-2 pr-2 py-1.5 focus-within:outline-none"
-                label=""
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-              <IoMdSearch className="absolute right-2 top-1/2 transform -translate-y-1/2 text-armsgrey text-[18px]" />
-            </div>
-          </div>
-        </div>
-
         {/* Table */}
         <div className="w-full overflow-x-auto">
           {loading ? (
@@ -205,7 +160,7 @@ export const CategoriesTable = () => {
                         </div>
                       </td>
                     </tr>
-                  )) )}
+                  )))}
                 {/* {currentItems.length === 0 && (
                   <tr>
                     <td colSpan={4} className="text-center py-4 text-gray-500">
@@ -227,30 +182,20 @@ export const CategoriesTable = () => {
         />
       </div>
 
-      {/* popups */}
-      {showAddCategoryPopup &&
-        (
-          <AddCategoryPopup
-            closePopup={closeAddCategoryPopup}
-            refreshData={refreshCategoryList}
-          />
-        )}
-
       {showEditCategoryPopup && selectedCategory &&
         (
           <EditCategoryPopup
             closePopup={closeEditCategoryPopup}
             EditCategory={selectedCategory}
-            refreshData={refreshCategoryList}
+            refreshData={loadcategorylist}
           />
         )}
-
 
       {showDeleteCategoryPopup && categoryToDelete &&
         (<DeleteCategoryPopup
           closePopup={closeDeleteCategoryPopup}
           CategoryData={categoryToDelete}
-          refreshData={refreshCategoryList}
+          refreshData={loadcategorylist}
         />)}
     </div>
   );

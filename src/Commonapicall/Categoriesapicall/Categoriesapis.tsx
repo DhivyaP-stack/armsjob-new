@@ -1,18 +1,17 @@
-import { CategoryApiResponse } from "../../pages/Categories/Categoriestable";
 import { apiAxios } from "../apiUrl";
 
-// Fetch all categories
-export const getCategories = async (page: number, pageSize: number) => {
+// Fetch all categories, search, pagination
+export const getCategories = async (page: number, search: string | undefined, PageSize: string,) => {
   try {
-    const response = await apiAxios.get<CategoryApiResponse>(
-      `/api/categories/?page=${page}&page_size=${pageSize}`
+    const response = await apiAxios.get(
+      `/api/categories/?page=${page}&search=${search || ''}&page_size=${PageSize || ''}`
     );
     if (!response.data || response.status !== 200) {
-      throw new Error("Failed to fetch categories");
+      throw new Error("Failed to fetch categories list");
     }
     return response.data;
-  } catch (error) {
-    console.error("Error fetching categories:", error);
+  } catch (error: unknown) {
+    console.error("Error fetching categories list:", error);
     throw error;
   }
 };

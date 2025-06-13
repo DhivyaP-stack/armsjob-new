@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { IoCloseOutline } from "react-icons/io5";
 import { Button } from "../../common/Button";
 import { InputField } from "../../common/InputField";
@@ -6,11 +6,13 @@ import * as zod from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "react-toastify";
-import { AddTestimonial } from "../../Commonapicall/settingsapicall/Testimonialapicall";
+import { Testimonial } from "../../pages/SettingTable/TestimonialTable";
+import { EditTestimonial } from "../../Commonapicall/settingsapicall/Testimonialapicall";
 
-interface AddTestimonialPopupProps {
+interface EditTestimonialPopupProps {
     closePopup: () => void;
     refreshData: () => void;
+    editTestimonial: Testimonial;
 }
 
 const testimonialSchema = zod.object({
@@ -27,11 +29,11 @@ const testimonialSchema = zod.object({
 
 type TestimonialFormData = zod.infer<typeof testimonialSchema>;
 
-export const AddTestimonialPopup: React.FC<AddTestimonialPopupProps> = ({
+export const EditTestimonialPopup: React.FC<EditTestimonialPopupProps> = ({
     closePopup,
+    editTestimonial,
     refreshData
 }) => {
-    const [, setLoading] = useState(false);
     const [, setError] = useState<string | null>(null);
 
     const {
@@ -39,34 +41,41 @@ export const AddTestimonialPopup: React.FC<AddTestimonialPopupProps> = ({
         handleSubmit,
         formState: { errors },
         reset,
+        setValue,
     } = useForm<TestimonialFormData>({
         resolver: zodResolver(testimonialSchema),
     });
 
-    const onSubmit = async (data: TestimonialFormData) => {
+    useEffect(() => {
+        if (editTestimonial) {
+            setValue("client_name", editTestimonial.client_name || '');
+            setValue("website", editTestimonial.website || '');
+            setValue("testimonial", editTestimonial.testimonial || '');
+        }
+    }, [editTestimonial, setValue]);
+
+    const handleFormSubmit = async (data: TestimonialFormData) => {
         try {
-            setLoading(true);
-            const success = await AddTestimonial(
+            const success = await EditTestimonial(
+                editTestimonial.id,
                 data.client_name || '',
                 data.website || '',
-                data.testimonial || '',)
+                data.testimonial || '',
+            )
             if (success) {
-                toast.success("Testimonial Added Successfully");
+                toast.success("Job Posting Added Successfully");
                 closePopup();
                 refreshData();
                 reset();
             } else {
-                toast.error("Failed to Add Testimonial. Please try again.");
+                toast.error("Failed to Add Job Posting. Please try again.");
             }
         } catch (error: unknown) {
             const errorMessage = error instanceof Error ? error.message : "Failed to submit form";
             setError(errorMessage);
             toast.error("Failed to submit form");
-        } finally {
-            setLoading(false);
         }
     };
-
 
     return (
         <div className="fixed inset-0 bg-armsAsh bg-opacity-70 flex justify-center items-start pt-25 z-50">
@@ -74,7 +83,7 @@ export const AddTestimonialPopup: React.FC<AddTestimonialPopupProps> = ({
                 {/* Heading */}
                 <div className="relative mb-5">
                     <h2 className="text-xl font-bold mb-4 border-b-2 border-armsgrey pb-3">
-                        Add Testimonial
+                        Edit New Testimonial
                     </h2>
                 </div>
                 <div
@@ -85,7 +94,7 @@ export const AddTestimonialPopup: React.FC<AddTestimonialPopupProps> = ({
                 </div>
 
                 {/* Form */}
-                <form onSubmit={handleSubmit(onSubmit)} className="h-[calc(100%-150px)] overflow-y-auto">
+                <form onSubmit={handleSubmit(handleFormSubmit)} className="h-[calc(100%-150px)] overflow-y-auto">
                     <div className="grid grid-cols-2 gap-4">
                         <div>
                             <label className="text-sm font-semibold mb-1">Client Name</label>

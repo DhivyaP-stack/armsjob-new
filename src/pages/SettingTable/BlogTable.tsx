@@ -5,7 +5,8 @@ import { Pagination } from "../../common/Pagination";
 export const BlogTable: React.FC = () => {
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage, setItemsPerPage] = useState(10);
-    const [totalCount, setTotalCount] = useState(0);
+    // const [totalCount, setTotalCount] = useState(0);
+    const [totalCount] = useState(0);
 
     function openEditCategoryPopup(): void {
         throw new Error("Function not implemented.");

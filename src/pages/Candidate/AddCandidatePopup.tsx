@@ -98,36 +98,54 @@ const jobInfoSchema = zod.object({
         ),
 });
 
+const MAX_FILE_SIZE = 500 * 1024; // 500KB
+const ACCEPTED_FILE_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'application/pdf'];
 // Documents Schema
 const documentsSchema = zod.object({
-    upload_cv: zod
-        .any()
-        .refine((files) => files?.length > 0, "CV is required")
-        .refine((files) => files?.[0]?.size <= 5_000_000, "Max file size is 5MB"),
-    insurance: zod
-        .any()
-        .optional()
-        .refine((files) => !files?.[0] || files?.[0]?.size <= 5_000_000, "Max file size is 5MB"),
-    passport: zod
-        .any()
-        .refine((files) => files?.length > 0, "Passport is required")
-        .refine((files) => files?.[0]?.size <= 5_000_000, "Max file size is 5MB"),
-    visa: zod
-        .any()
+    upload_cv: zod.any()
+        .refine((files) => files?.length > 0, "Resume is required")
+        .refine(
+            (files) => !files?.[0] || ACCEPTED_FILE_TYPES.includes(files?.[0]?.type),
+            "Only .jpg, .jpeg, .png, and .pdf formats are supported"
+        ),
+    insurance: zod.any()
+        .refine((files) => files?.[0]?.size <= MAX_FILE_SIZE, "Max file size is 500KB")
+        .refine(
+            (files) => !files?.[0] || ACCEPTED_FILE_TYPES.includes(files?.[0]?.type),
+            "Only .jpg, .jpeg, .png, and .pdf formats are supported"
+        ),
+    passport: zod.any()
+        .refine((files) => files?.length > 0, "passport is required")
+        .refine((files) => files?.[0]?.size <= MAX_FILE_SIZE, "Max file size is 500KB")
+        .refine(
+            (files) => !files?.[0] || ACCEPTED_FILE_TYPES.includes(files?.[0]?.type),
+            "Only .jpg, .jpeg, .png, and .pdf formats are supported"
+        ),
+    visa: zod.any()
         .refine((files) => files?.length > 0, "Visa is required")
-        .refine((files) => files?.[0]?.size <= 5_000_000, "Max file size is 5MB"),
-    noc: zod
-        .any()
-        .optional()
-        .refine((files) => !files?.[0] || files?.[0]?.size <= 5_000_000, "Max file size is 5MB"),
-    license: zod
-        .any()
-        .optional()
-        .refine((files) => !files?.[0] || files?.[0]?.size <= 5_000_000, "Max file size is 5MB"),
-    experience_certificate: zod
-        .any()
-        .optional()
-        .refine((files) => !files?.[0] || files?.[0]?.size <= 5_000_000, "Max file size is 5MB"),
+        .refine((files) => files?.[0]?.size <= MAX_FILE_SIZE, "Max file size is 500KB")
+        .refine(
+            (files) => !files?.[0] || ACCEPTED_FILE_TYPES.includes(files?.[0]?.type),
+            "Only .jpg, .jpeg, .png, and .pdf formats are supported"
+        ),
+    noc: zod.any()
+        .refine((files) => files?.[0]?.size <= MAX_FILE_SIZE, "Max file size is 500KB")
+        .refine(
+            (files) => !files?.[0] || ACCEPTED_FILE_TYPES.includes(files?.[0]?.type),
+            "Only .jpg, .jpeg, .png, and .pdf formats are supported"
+        ),
+    license: zod.any()
+        .refine((files) => files?.[0]?.size <= MAX_FILE_SIZE, "Max file size is 500KB")
+        .refine(
+            (files) => !files?.[0] || ACCEPTED_FILE_TYPES.includes(files?.[0]?.type),
+            "Only .jpg, .jpeg, .png, and .pdf formats are supported"
+        ),
+    experience_certificate: zod.any()
+        .refine((files) => files?.[0]?.size <= MAX_FILE_SIZE, "Max file size is 500KB")
+        .refine(
+            (files) => !files?.[0] || ACCEPTED_FILE_TYPES.includes(files?.[0]?.type),
+            "Only .jpg, .jpeg, .png, and .pdf formats are supported"
+        ),
 });
 
 // Other Information Schema
@@ -207,8 +225,13 @@ export const AddCandidatePopup: React.FC<AddCandidatePopupProps> = ({
             'uae_experience_years'
         ],
         "Documents Upload": [
-            'cv',
-            'relevantDocuments'
+            'upload_cv',
+            'insurance',
+            'passport',
+            'visa',
+            'noc',
+            'license',
+            'experience_certificate'
         ],
         "Other Information": [
             'additional_notes',
@@ -469,7 +492,7 @@ export const AddCandidatePopup: React.FC<AddCandidatePopupProps> = ({
                                             <div>
                                                 <label className="text-sm font-semibold mb-1">
                                                     Nationality <span className="text-red-500">*</span>
-                                                    </label>
+                                                </label>
                                                 <InputField
                                                     type="text"
                                                     {...register("nationality")}
@@ -701,7 +724,7 @@ export const AddCandidatePopup: React.FC<AddCandidatePopupProps> = ({
                                                 {...register("languages_spoken")}
                                                 name="languages_spoken"
                                                 className="w-full h-9.5 rounded-[5px] border-[1px] border-armsgrey px-2 py-1.5 focus-within:outline-none"
-                                                // label={""}
+                                            // label={""}
                                             />
                                         </div>
                                         <div>
@@ -751,204 +774,213 @@ export const AddCandidatePopup: React.FC<AddCandidatePopupProps> = ({
                         </div>
                     )}
                     {activeTab === "Documents Upload" && (
-    <div className="max-w-full mx-auto p-4">
-        {/* First Row - 4 documents */}
-        <div className="grid grid-cols-4 gap-6 mb-6">
-            {/* Resume */}
-            <div className="flex items-center gap-4">
-                <div className="flex-1">
-                    <label className="text-sm font-semibold mb-1">Resume*</label>
-                    <input 
-                        type="file"
-                        id="upload_cv"
-                        {...register("upload_cv")}
-                        accept=".pdf,.doc,.docx"
-                        className="hidden" 
-                    />
-                    <input
-                        type="text"
-                        readOnly
-                        placeholder="Upload your resume"
-                        className="w-full rounded-[5px] border-[1px] border-armsgrey px-2 py-1.5 focus-within:outline-none"
-                        value={watch("upload_cv")?.[0]?.name || ""}
-                    />
-                </div>
-                <label 
-                    htmlFor="upload_cv"
-                    className="bg-armsjobslightblue text-armsWhite px-4 py-1.5 rounded text-sm hover:bg-armsWhite hover:text-armsjobslightblue border border-armsjobslightblue mt-6 cursor-pointer"
-                >
-                    Upload
-                </label>
-            </div>
+                        <div className="max-w-full mx-auto p-4">
+                            {/* First Row - 4 documents */}
+                            <div className="grid grid-cols-4 gap-6 mb-6">
+                                <div className="flex flex-col gap-1">
+                                    {/* Resume */}
+                                    <div className="flex items-center gap-4">
+                                        <div className="flex-1">
+                                            <label className="text-sm font-semibold mb-1">Resume<span className="text-red-500">*</span></label>
+                                            <input
+                                                type="file"
+                                                id="upload_cv"
+                                                {...register("upload_cv")}
+                                                accept=".pdf,.doc,.docx"
+                                                className="hidden"
+                                            />
+                                            <input
+                                                type="text"
+                                                readOnly
+                                                placeholder="Upload your resume"
+                                                className="w-full rounded-[5px] border-[1px] border-armsgrey px-2 py-1.5 focus-within:outline-none"
+                                                value={watch("upload_cv")?.[0]?.name || ""}
+                                            />
+                                        </div>
+                                        <label
+                                            htmlFor="upload_cv"
+                                            className="bg-armsjobslightblue text-armsWhite px-4 py-1.5 rounded text-sm hover:bg-armsWhite hover:text-armsjobslightblue border border-armsjobslightblue mt-6 cursor-pointer"
+                                        >
+                                            Upload
+                                        </label>
+                                    </div>
+                                    {errors.upload_cv && <p className="text-sm text-red-500">{errors.upload_cv.message as string}</p>}
+                                </div>
 
-            {/* Insurance */}
-            <div className="flex items-center gap-4">
-                <div className="flex-1">
-                    <label className="text-sm font-semibold mb-1">Insurance</label>
-                    <input 
-                        type="file"
-                        id="insurance"
-                        {...register("insurance")}
-                        accept=".pdf,.jpg,.jpeg,.png"
-                        className="hidden" 
-                    />
-                    <input
-                        type="text"
-                        readOnly
-                        placeholder="Upload insurance document"
-                        className="w-full rounded-[5px] border-[1px] border-armsgrey px-2 py-1.5 focus-within:outline-none"
-                        value={watch("insurance")?.[0]?.name || ""}
-                    />
-                </div>
-                <label 
-                    htmlFor="insurance"
-                    className="bg-armsjobslightblue text-armsWhite px-4 py-1.5 rounded text-sm hover:bg-armsWhite hover:text-armsjobslightblue border border-armsjobslightblue mt-6 cursor-pointer"
-                >
-                    Upload
-                </label>
-            </div>
+                                {/* Insurance */}
+                                <div className="flex items-center gap-4">
+                                    <div className="flex-1">
+                                        <label className="text-sm font-semibold mb-1">Insurance</label>
+                                        <input
+                                            type="file"
+                                            id="insurance"
+                                            {...register("insurance")}
+                                            accept=".pdf,.jpg,.jpeg,.png"
+                                            className="hidden"
+                                        />
+                                        <input
+                                            type="text"
+                                            readOnly
+                                            placeholder="Upload insurance document"
+                                            className="w-full rounded-[5px] border-[1px] border-armsgrey px-2 py-1.5 focus-within:outline-none"
+                                            value={watch("insurance")?.[0]?.name || ""}
+                                        />
+                                    </div>
+                                    <label
+                                        htmlFor="insurance"
+                                        className="bg-armsjobslightblue text-armsWhite px-4 py-1.5 rounded text-sm hover:bg-armsWhite hover:text-armsjobslightblue border border-armsjobslightblue mt-6 cursor-pointer"
+                                    >
+                                        Upload
+                                    </label>
+                                </div>
 
-            {/* Passport */}
-            <div className="flex items-center gap-4">
-                <div className="flex-1">
-                    <label className="text-sm font-semibold mb-1">Passport*</label>
-                    <input 
-                        type="file"
-                        id="passport"
-                        {...register("passport")}
-                        accept=".pdf,.jpg,.jpeg,.png"
-                        className="hidden" 
-                    />
-                    <input
-                        type="text"
-                        readOnly
-                        placeholder="Upload passport"
-                        className="w-full rounded-[5px] border-[1px] border-armsgrey px-2 py-1.5 focus-within:outline-none"
-                        value={watch("passport")?.[0]?.name || ""}
-                    />
-                </div>
-                <label 
-                    htmlFor="passport"
-                    className="bg-armsjobslightblue text-armsWhite px-4 py-1.5 rounded text-sm hover:bg-armsWhite hover:text-armsjobslightblue border border-armsjobslightblue mt-6 cursor-pointer"
-                >
-                    Upload
-                </label>
-            </div>
+                                {/* Passport */}
+                                <div className="flex flex-col gap-1">
+                                    <div className="flex items-center gap-4">
+                                        <div className="flex-1">
+                                            <label className="text-sm font-semibold mb-1">Passport<span className="text-red-500">*</span></label>
+                                            <input
+                                                type="file"
+                                                id="passport"
+                                                {...register("passport")}
+                                                accept=".pdf,.jpg,.jpeg,.png"
+                                                className="hidden"
+                                            />
+                                            <input
+                                                type="text"
+                                                readOnly
+                                                placeholder="Upload passport"
+                                                className="w-full rounded-[5px] border-[1px] border-armsgrey px-2 py-1.5 focus-within:outline-none"
+                                                value={watch("passport")?.[0]?.name || ""}
+                                            />
+                                        </div>
+                                        <label
+                                            htmlFor="passport"
+                                            className="bg-armsjobslightblue text-armsWhite px-4 py-1.5 rounded text-sm hover:bg-armsWhite hover:text-armsjobslightblue border border-armsjobslightblue mt-6 cursor-pointer"
+                                        >
+                                            Upload
+                                        </label>
+                                    </div>
+                                    {errors.passport && <p className="text-sm text-red-500">{errors.passport.message as string}</p>}
+                                </div>
 
-            {/* Visa */}
-            <div className="flex items-center gap-4">
-                <div className="flex-1">
-                    <label className="text-sm font-semibold mb-1">Visa*</label>
-                    <input 
-                        type="file"
-                        id="visa"
-                        {...register("visa")}
-                        accept=".pdf,.jpg,.jpeg,.png"
-                        className="hidden" 
-                    />
-                    <input
-                        type="text"
-                        readOnly
-                        placeholder="Upload visa"
-                        className="w-full rounded-[5px] border-[1px] border-armsgrey px-2 py-1.5 focus-within:outline-none"
-                        value={watch("visa")?.[0]?.name || ""}
-                    />
-                </div>
-                <label 
-                    htmlFor="visa"
-                    className="bg-armsjobslightblue text-armsWhite px-4 py-1.5 rounded text-sm hover:bg-armsWhite hover:text-armsjobslightblue border border-armsjobslightblue mt-6 cursor-pointer"
-                >
-                    Upload
-                </label>
-            </div>
-        </div>
+                                {/* Visa */}
+                                <div className="flex flex-col gap-1">
+                                    <div className="flex items-center gap-4">
+                                        <div className="flex-1">
+                                            <label className="text-sm font-semibold mb-1">Visa</label><span className="text-red-500">*</span>
+                                            <input
+                                                type="file"
+                                                id="visa"
+                                                {...register("visa")}
+                                                accept=".pdf,.jpg,.jpeg,.png"
+                                                className="hidden"
+                                            />
+                                            <input
+                                                type="text"
+                                                readOnly
+                                                placeholder="Upload visa"
+                                                className="w-full rounded-[5px] border-[1px] border-armsgrey px-2 py-1.5 focus-within:outline-none"
+                                                value={watch("visa")?.[0]?.name || ""}
+                                            />
+                                        </div>
+                                        <label
+                                            htmlFor="visa"
+                                            className="bg-armsjobslightblue text-armsWhite px-4 py-1.5 rounded text-sm hover:bg-armsWhite hover:text-armsjobslightblue border border-armsjobslightblue mt-6 cursor-pointer"
+                                        >
+                                            Upload
+                                        </label>
+                                    </div>
+                                    {errors.visa && <p className="text-sm text-red-500">{errors.visa.message as string}</p>}
+                                </div>
+                            </div>
 
-        {/* Second Row - 3 documents */}
-        <div className="grid grid-cols-4 gap-6 mb-6">
-            {/* NOC */}
-            <div className="flex items-center gap-4">
-                <div className="flex-1">
-                    <label className="text-sm font-semibold mb-1">NOC</label>
-                    <input 
-                        type="file"
-                        id="noc"
-                        {...register("noc")}
-                        accept=".pdf,.jpg,.jpeg,.png"
-                        className="hidden" 
-                    />
-                    <input
-                        type="text"
-                        readOnly
-                        placeholder="Upload NOC"
-                        className="w-full rounded-[5px] border-[1px] border-armsgrey px-2 py-1.5 focus-within:outline-none"
-                        value={watch("noc")?.[0]?.name || ""}
-                    />
-                </div>
-                <label 
-                    htmlFor="noc"
-                    className="bg-armsjobslightblue text-armsWhite px-4 py-1.5 rounded text-sm hover:bg-armsWhite hover:text-armsjobslightblue border border-armsjobslightblue mt-6 cursor-pointer"
-                >
-                    Upload
-                </label>
-            </div>
+                            {/* Second Row - 3 documents */}
+                            <div className="grid grid-cols-4 gap-6 mb-6">
+                                {/* NOC */}
+                                <div className="flex items-center gap-4">
+                                    <div className="flex-1">
+                                        <label className="text-sm font-semibold mb-1">NOC</label>
+                                        <input
+                                            type="file"
+                                            id="noc"
+                                            {...register("noc")}
+                                            accept=".pdf,.jpg,.jpeg,.png"
+                                            className="hidden"
+                                        />
+                                        <input
+                                            type="text"
+                                            readOnly
+                                            placeholder="Upload NOC"
+                                            className="w-full rounded-[5px] border-[1px] border-armsgrey px-2 py-1.5 focus-within:outline-none"
+                                            value={watch("noc")?.[0]?.name || ""}
+                                        />
+                                    </div>
+                                    <label
+                                        htmlFor="noc"
+                                        className="bg-armsjobslightblue text-armsWhite px-4 py-1.5 rounded text-sm hover:bg-armsWhite hover:text-armsjobslightblue border border-armsjobslightblue mt-6 cursor-pointer"
+                                    >
+                                        Upload
+                                    </label>
+                                </div>
 
-            {/* License */}
-            <div className="flex items-center gap-4">
-                <div className="flex-1">
-                    <label className="text-sm font-semibold mb-1">Vehicle License</label>
-                    <input 
-                        type="file"
-                        id="license"
-                        {...register("license")}
-                        accept=".pdf,.jpg,.jpeg,.png"
-                        className="hidden" 
-                    />
-                    <input
-                        type="text"
-                        readOnly
-                        placeholder="Upload license"
-                        className="w-full rounded-[5px] border-[1px] border-armsgrey px-2 py-1.5 focus-within:outline-none"
-                        value={watch("license")?.[0]?.name || ""}
-                    />
-                </div>
-                <label 
-                    htmlFor="license"
-                    className="bg-armsjobslightblue text-armsWhite px-4 py-1.5 rounded text-sm hover:bg-armsWhite hover:text-armsjobslightblue border border-armsjobslightblue mt-6 cursor-pointer"
-                >
-                    Upload
-                </label>
-            </div>
+                                {/* License */}
+                                <div className="flex items-center gap-4">
+                                    <div className="flex-1">
+                                        <label className="text-sm font-semibold mb-1">Vehicle License</label>
+                                        <input
+                                            type="file"
+                                            id="license"
+                                            {...register("license")}
+                                            accept=".pdf,.jpg,.jpeg,.png"
+                                            className="hidden"
+                                        />
+                                        <input
+                                            type="text"
+                                            readOnly
+                                            placeholder="Upload license"
+                                            className="w-full rounded-[5px] border-[1px] border-armsgrey px-2 py-1.5 focus-within:outline-none"
+                                            value={watch("license")?.[0]?.name || ""}
+                                        />
+                                    </div>
+                                    <label
+                                        htmlFor="license"
+                                        className="bg-armsjobslightblue text-armsWhite px-4 py-1.5 rounded text-sm hover:bg-armsWhite hover:text-armsjobslightblue border border-armsjobslightblue mt-6 cursor-pointer"
+                                    >
+                                        Upload
+                                    </label>
+                                </div>
 
-            {/* Experience Certificate */}
-            <div className="flex items-center gap-4">
-                <div className="flex-1">
-                    <label className="text-sm font-semibold mb-1">Experience Certificate</label>
-                    <input 
-                        type="file"
-                        id="experience_certificate"
-                        {...register("experience_certificate")}
-                        accept=".pdf,.jpg,.jpeg,.png"
-                        className="hidden" 
-                    />
-                    <input
-                        type="text"
-                        readOnly
-                        placeholder="Upload experience certificate"
-                        className="w-full rounded-[5px] border-[1px] border-armsgrey px-2 py-1.5 focus-within:outline-none"
-                        value={watch("experience_certificate")?.[0]?.name || ""}
-                    />
-                </div>
-                <label 
-                    htmlFor="experience_certificate"
-                    className="bg-armsjobslightblue text-armsWhite px-4 py-1.5 rounded text-sm hover:bg-armsWhite hover:text-armsjobslightblue border border-armsjobslightblue mt-6 cursor-pointer"
-                >
-                    Upload
-                </label>
-            </div>
-        </div>
-        <p className="text-xs text-gray-400 mt-4">Note: Please ensure all relevant documents are uploaded in the required format. Each file should not exceed 500 KB in size. Larger files may not be accepted by the system. Kindly compress your documents if necessary before uploading.</p>
-    </div>
-)}
+                                {/* Experience Certificate */}
+                                <div className="flex items-center gap-4">
+                                    <div className="flex-1">
+                                        <label className="text-sm font-semibold mb-1">Experience Certificate</label>
+                                        <input
+                                            type="file"
+                                            id="experience_certificate"
+                                            {...register("experience_certificate")}
+                                            accept=".pdf,.jpg,.jpeg,.png"
+                                            className="hidden"
+                                        />
+                                        <input
+                                            type="text"
+                                            readOnly
+                                            placeholder="Upload experience certificate"
+                                            className="w-full rounded-[5px] border-[1px] border-armsgrey px-2 py-1.5 focus-within:outline-none"
+                                            value={watch("experience_certificate")?.[0]?.name || ""}
+                                        />
+                                    </div>
+                                    <label
+                                        htmlFor="experience_certificate"
+                                        className="bg-armsjobslightblue text-armsWhite px-4 py-1.5 rounded text-sm hover:bg-armsWhite hover:text-armsjobslightblue border border-armsjobslightblue mt-6 cursor-pointer"
+                                    >
+                                        Upload
+                                    </label>
+                                </div>
+                            </div>
+                            <p className="text-xs text-gray-400 mt-4">Note: Please ensure all relevant documents are uploaded in the required format. Each file should not exceed 500 KB in size. Larger files may not be accepted by the system. Kindly compress your documents if necessary before uploading.</p>
+                        </div>
+                    )}
                     {activeTab === "Other Information" && (
                         <div className="max-w-full mx-auto p-0 pl-1">
                             <div className="flex flex-col gap-1 items-start">

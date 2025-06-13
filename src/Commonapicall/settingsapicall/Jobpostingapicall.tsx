@@ -1,5 +1,6 @@
 import { apiAxios } from "../apiUrl";
 
+//list JobPostings, saerch, pagination
 export const fetchJobPostingsList = async (page: number, search: string | undefined, PageSize: string,) => {
   try {
     const response = await apiAxios.get(

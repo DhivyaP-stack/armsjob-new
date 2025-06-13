@@ -81,7 +81,9 @@ const personalInfoSchema = zod.object({
         .string()
         .min(1, "Email is required")
         .regex(/^[^\s@]+@[^\s@]+\.[^\s@]+$/, "Invalid email format"),
-    nationality: zod.string().optional(),
+    nationality: zod
+            .string()
+            .min(1, "Nationality is required"),
     current_location: zod.string().optional(),
 });
 
@@ -486,7 +488,7 @@ export const EditCandidatePopup: React.FC<EditCandidatePopupProps> = ({
                                                 {errors.email && <p className="text-sm text-red-500">{errors.email.message}</p>}
                                             </div>
                                             <div>
-                                                <label className="text-sm font-semibold mb-1">Nationality</label>
+                                                <label className="text-sm font-semibold mb-1">Nationality<span className="text-red-500">*</span></label>
                                                 <InputField
                                                     type="text"
                                                     {...register("nationality")}
@@ -494,6 +496,7 @@ export const EditCandidatePopup: React.FC<EditCandidatePopupProps> = ({
                                                     className="w-full rounded-[5px] border-[1px] border-armsgrey px-2 py-1.5 focus-within:outline-none"
                                                     label={""}
                                                 />
+                                                 {errors.nationality && <p className="text-sm text-red-500">{errors.nationality.message}</p>}
                                             </div>
                                             <div>
                                                 <label className="text-sm font-semibold mb-1">Current Location</label>

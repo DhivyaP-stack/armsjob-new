@@ -20,7 +20,6 @@ export const SettingsTab = () => {
     const [searchQuery, setSearchQuery] = useState("");
     const [refreshTrigger, setRefreshTrigger] = useState(false);
 
-
     const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setSearchQuery(e.target.value);
     };
@@ -152,19 +151,19 @@ export const SettingsTab = () => {
                         </div>
                         <div>
                             {activeTab === "Categories" && (
-                                <CategoriesTable />
+                                <CategoriesTable  searchQuery={searchQuery} refreshTrigger={refreshTrigger} />
                             )}
                             {activeTab === "Blog" && (
                                 <BlogTable />
                             )}
                             {activeTab === "Testimonial" && (
-                                <TestimonialTable />
+                                <TestimonialTable searchQuery={searchQuery} refreshTrigger={refreshTrigger}/>
                             )}
                             {activeTab === "Job Posting" && (
                                 <JobpostingTable searchQuery={searchQuery} refreshTrigger={refreshTrigger} />
                             )}
                             {activeTab === "Candidate Bench List" && (
-                                <CanditebenchlistTable />
+                                <CanditebenchlistTable searchQuery={searchQuery} refreshTrigger={refreshTrigger}/>
                             )}
 
                         </div>
